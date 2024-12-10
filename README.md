@@ -92,7 +92,7 @@ And show the initial state of available GPU devices on the worker node:
 $ kubectl get resourceslice -o yaml
 apiVersion: v1
 items:
-- apiVersion: resource.k8s.io/v1alpha3
+- apiVersion: resource.k8s.io/v1beta1
   kind: ResourceSlice
   metadata:
     creationTimestamp: "2024-07-16T13:00:06Z"
