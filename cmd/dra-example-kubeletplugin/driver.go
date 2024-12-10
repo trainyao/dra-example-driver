@@ -49,7 +49,7 @@ func NewDriver(ctx context.Context, config *Config) (*driver, error) {
 
 	plugin, err := kubeletplugin.Start(
 		ctx,
-		driver,
+		[]interface{}{driver},
 		kubeletplugin.KubeClient(config.coreclient),
 		kubeletplugin.NodeName(config.flags.nodeName),
 		kubeletplugin.DriverName(DriverName),
@@ -87,7 +87,7 @@ func (d *driver) NodePrepareResources(ctx context.Context, req *drapbv1.NodePrep
 }
 
 func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) *drapbv1.NodePrepareResourceResponse {
-	resourceClaim, err := d.client.ResourceV1alpha3().ResourceClaims(claim.Namespace).Get(
+	resourceClaim, err := d.client.ResourceV1beta1().ResourceClaims(claim.Namespace).Get(
 		ctx,
 		claim.Name,
 		metav1.GetOptions{})
