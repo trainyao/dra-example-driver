@@ -19,6 +19,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"k8s.io/api/resource/v1beta1"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	coreclientset "k8s.io/client-go/kubernetes"
@@ -69,6 +71,20 @@ func NewDriver(ctx context.Context, config *Config) (*driver, error) {
 	if err := plugin.PublishResources(ctx, resources); err != nil {
 		return nil, err
 	}
+
+	go func() {
+		klog.Errorf("start device disappear timer 10s")
+		time.AfterFunc(10*time.Second, func() {
+			klog.Infof("device disappear timer 10s end")
+
+			plugin.PublishResources(ctx, kubeletplugin.Resources{
+				Devices: make([]v1beta1.Device, 0, 0),
+			})
+			//
+			//state.allocatable = make(AllocatableDevices, 0)
+			klog.Infof("device clear done")
+		})
+	}()
 
 	return driver, nil
 }
