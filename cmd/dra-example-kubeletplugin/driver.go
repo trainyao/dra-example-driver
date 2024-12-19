@@ -18,9 +18,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-
+	"k8s.io/api/resource/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	coreclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/dynamic-resource-allocation/kubeletplugin"
 	"k8s.io/klog/v2"
@@ -102,6 +104,39 @@ func (d *driver) nodePrepareResource(ctx context.Context, claim *drapbv1.Claim) 
 
 	prepared, err := d.state.Prepare(resourceClaim)
 	if err != nil {
+		return &drapbv1.NodePrepareResourceResponse{
+			Error: fmt.Sprintf("error preparing devices for claim %v: %v", claim.UID, err),
+		}
+	}
+	//trainTestString := "traintest"
+	//applyStatusConf := &v1beta12.ResourceClaimApplyConfiguration{
+	//	ObjectMetaApplyConfiguration: &v1.ObjectMetaApplyConfiguration{
+	//		Name:      &resourceClaim.Name,
+	//		Namespace: &resourceClaim.Namespace,
+	//	},
+	//	Status: &v1beta12.ResourceClaimStatusApplyConfiguration{
+	//		Devices: []v1beta12.AllocatedDeviceStatusApplyConfiguration{{
+	//			Driver: &trainTestString,
+	//			Pool:   &trainTestString,
+	//			Device: &trainTestString,
+	//		}},
+	//	},
+	//}
+	data := []v1beta1.AllocatedDeviceStatus{{
+		Driver: "test1",
+		Pool:   "test2",
+		Device: "test3",
+	}}
+	datab, err := json.Marshal(&data)
+	if err != nil {
+		return &drapbv1.NodePrepareResourceResponse{
+			Error: fmt.Sprintf("error preparing devices for claim %v: %v", claim.UID, err),
+		}
+	}
+	datac := fmt.Sprintf(`[{"type":"replace","path":"/status/devices","value":%s}]`, string(datab))
+	if _, err := d.client.ResourceV1beta1().ResourceClaims(resourceClaim.Namespace).
+		Patch(ctx, resourceClaim.Name, types.JSONPatchType, []byte(datac), metav1.PatchOptions{}); err != nil {
+		//ApplyStatus(ctx, applyStatusConf, metav1.ApplyOptions{}); err != nil {
 		return &drapbv1.NodePrepareResourceResponse{
 			Error: fmt.Sprintf("error preparing devices for claim %v: %v", claim.UID, err),
 		}
